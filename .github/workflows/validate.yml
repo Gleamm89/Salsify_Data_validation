@@ -32,31 +32,61 @@ jobs:
       - name: Run validation script for all CSV parts
         continue-on-error: true
         run: |
-          mkdir -p output
+          mkdir -p site
+          mkdir -p artifact-output
 
           for file in data/Validation_input_part_*.csv; do
+            part_name=$(basename "$file" .csv)
             echo "Validating $file"
+
+            rm -rf output
+            mkdir -p output
+
             python validate_variants.py "$file" || true
+
+            mkdir -p "site/$part_name"
+
+            if [ -f output/validation_group_details.html ]; then
+              cp output/validation_group_details.html "site/$part_name/index.html"
+            else
+              echo "<h1>No validation report generated for $part_name</h1>" > "site/$part_name/index.html"
+            fi
+
+            mkdir -p "artifact-output/$part_name"
+            cp -r output/* "artifact-output/$part_name/" || true
           done
 
-      - name: Prepare Pages content
+      - name: Prepare Pages index
         if: always()
         run: |
-          mkdir -p site
-
-          if [ -f output/validation_group_details.html ]; then
-            cp output/validation_group_details.html site/index.html
-          else
-            echo "<h1>No validation report generated</h1>" > site/index.html
-            echo "<p>Expected file missing: output/validation_group_details.html</p>" >> site/index.html
-          fi
+          cat > site/index.html <<'EOF'
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Validation Reports</title>
+            </head>
+            <body>
+              <h1>Validation Reports</h1>
+              <ul>
+                <li><a href="Validation_input_part_01/">Validation input part 01</a></li>
+                <li><a href="Validation_input_part_02/">Validation input part 02</a></li>
+                <li><a href="Validation_input_part_03/">Validation input part 03</a></li>
+                <li><a href="Validation_input_part_04/">Validation input part 04</a></li>
+                <li><a href="Validation_input_part_05/">Validation input part 05</a></li>
+                <li><a href="Validation_input_part_06/">Validation input part 06</a></li>
+                <li><a href="Validation_input_part_07/">Validation input part 07</a></li>
+              </ul>
+            </body>
+          </html>
+          EOF
 
       - name: Upload validation artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: validation-output
-          path: output/
+          path: artifact-output/
           if-no-files-found: warn
 
       - name: Upload Pages artifact
