@@ -1,0 +1,25 @@
+name: Validate Variants
+
+on:
+  push:
+    paths:
+      - "*.csv"
+      - "*.py"
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Run validation script
+        run: python validate_variants.py export_converted.csv
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-output
+          path: output/
