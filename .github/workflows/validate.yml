@@ -24,3 +24,9 @@ jobs:
         with:
           name: validation-output
           path: output/
+
+      - name: Prepare GitHub Pages content
+        if: always()
+        run: |
+          mkdir -p docs
+          cp output/validation_group_details.html docs/index.html
