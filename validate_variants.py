@@ -379,3 +379,31 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+
+import csv
+
+def csv_to_html(csv_file, html_file):
+    with open(csv_file, newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        rows = list(reader)
+
+    html = "<html><body><table border='1' style='border-collapse: collapse;'>"
+
+    for i, row in enumerate(rows):
+        html += "<tr>"
+        for cell in row:
+            tag = "th" if i == 0 else "td"
+            html += f"<{tag} style='padding:5px'>{cell}</{tag}>"
+        html += "</tr>"
+
+    html += "</table></body></html>"
+
+    with open(html_file, "w", encoding="utf-8") as f:
+        f.write(html)
+
+
+# Convert outputs
+csv_to_html("output/validation_issues.csv", "output/validation_issues.html")
+csv_to_html("output/validation_summary.csv", "output/validation_summary.html")
