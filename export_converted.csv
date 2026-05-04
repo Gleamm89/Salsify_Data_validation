@@ -1,0 +1,29 @@
+ID,Name - en,Publication_Date,Status,Created_At,Validation_DigitalAssets,Variation_Name_2 - en,Variation_Name_3 - en,Variation_Value_1 - en,Variation_Value_2 - en,Variation_Value_3 - en,CMS_Amazon_Title - en,Variation_Group-ID,salsify:parent_id,salsify:data_inheritance_hierarchy_level_id
+M298971,TV Stand Cabinet Hifi,,,CMS,,,,,,,,M298971,,Parent
+245455,TV stand,2024-05-20,Published,CMS,,,,Silver,,,vidaXL TV Cabinet 120x30x40cm Silver Home Furniture HiFi Lowboard Stand Unit,M298971,M298971,Child
+245456,TV stand,2024-05-20,Published,CMS,,,,Black,,,vidaXL TV Cabinet 120x30x43cm Black Home Furniture HiFi Lowboard Stand Unit,M298971,M298971,Child
+245457,TV stand,2024-12-13,Published,CMS,Yes,,,White,,,vidaXL TV Cabinet 120x30x40cm White Home Furniture HiFi Lowboard Stand Unit,M298971,M298971,Child
+M3043973,Bedside Table Cabinet Bed Side,,,CMS,,Quantity in Package,,,,,,M3043973,,Parent
+858652,,2024-10-18,Published,CMS,Yes,,,Black,1.0,,"vidaXL Bedside Table Black Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858656,,2024-10-18,Published,CMS,Yes,,,Concrete grey,1.0,,"vidaXL Bedside Table Concrete Grey 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858667,,2024-10-21,Published,CMS,Yes,,,Artisan oak,2.0,,"vidaXL Bedside Tables 2 pcs Artisan Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858665,,2024-10-21,Published,CMS,Yes,,,Old wood,2.0,,"vidaXL Bedside Tables 2 pcs Old Wood 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858657,,2024-10-18,Published,CMS,Yes,,,Concrete grey,2.0,,"vidaXL Bedside Tables 2 pcs Concrete Grey 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858666,,2024-10-21,Published,CMS,Yes,,,Artisan oak,1.0,,"vidaXL Bedside Table Artisan Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858661,,2024-10-21,Published,CMS,Yes,,,Grey sonoma,2.0,,"vidaXL Bedside Tables 2 pcs Grey Sonoma 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858653,,2024-10-18,Published,CMS,Yes,,,Black,2.0,,"vidaXL Bedside Tables 2 pcs Black Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858658,,2024-10-18,Published,CMS,Yes,,,Smoked oak,1.0,,"vidaXL Bedside Table Smoked Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858662,,2024-10-21,Published,CMS,Yes,,,Brown oak,1.0,,"vidaXL Bedside Table Brown Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858663,,2024-10-21,Published,CMS,Yes,,,Brown oak,2.0,,"vidaXL Bedside Tables 2 pcs Brown Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858651,,2024-10-18,Published,CMS,Yes,,,White,2.0,,"vidaXL Bedside Tables 2 pcs White 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858660,,2024-10-18,Published,CMS,Yes,,,Grey sonoma,1.0,,"vidaXL Bedside Table Grey Sonoma 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858654,,2024-10-18,Published,CMS,Yes,,,Sonoma oak,1.0,,"vidaXL Bedside Table Sonoma Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858664,,2024-10-21,Published,CMS,Yes,,,Old wood,1.0,,"vidaXL Bedside Table Old Wood 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858650,,2024-10-18,Published,CMS,Yes,,,White,1.0,,"vidaXL Bedside Table White 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet, side table for bedroom",M3043973,M3043973,Child
+858655,,2024-10-18,Published,CMS,Yes,,,Sonoma oak,2.0,,"vidaXL Bedside Tables 2 pcs Sonoma Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+858659,,2024-10-18,Published,CMS,Yes,,,Smoked oak,2.0,,"vidaXL Bedside Tables 2 pcs Smoked Oak 46.5x29x61 cm Engineered Wood, bedside cabinet, nightstand, bed table, bed side table, bed cabinet",M3043973,M3043973,Child
+M3014411,Dog bed,,,CMS,,,,,,,,M3014411,,Parent
+441337,Dog bed,2023-09-19,Published,CMS,,,,Beige,,,Designed by Lotte Lounging Dog Basket Xanto Round Beige Dog Bed Puppy Cushion,M3014411,M3014411,Child
+441338,Dog bed,2023-09-19,Published,CMS,Yes,,,Grey,,,Designed by Lotte Lounging Dog Basket Xanto Round Grey Dog Bed Puppy Cushion,M3014411,M3014411,Child
+M100089,Digger toy,,,CMS,,,,,,,,M100089,,Parent
+100089,Ride-on car,2024-08-23,Published,CMS,Yes,,,,,,Children Kids Toddlers Ride-on Excavator Vehicle Plastic Yellow Gift Role Play,M100089,M100089,Child
