@@ -3,7 +3,7 @@ name: Validate Variants
 on:
   push:
     paths:
-      - "*.csv"
+      - "data/*.csv"
       - "*.py"
       - ".github/workflows/*.yml"
   workflow_dispatch:
@@ -29,15 +29,27 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Run validation script
+      - name: Run validation script for all CSV parts
         continue-on-error: true
-        run: python validate_variants.py export_converted.csv
+        run: |
+          mkdir -p output
+
+          for file in data/Validation_input_part_*.csv; do
+            echo "Validating $file"
+            python validate_variants.py "$file" || true
+          done
 
       - name: Prepare Pages content
         if: always()
         run: |
           mkdir -p site
-          cp output/validation_group_details.html site/index.html
+
+          if [ -f output/validation_group_details.html ]; then
+            cp output/validation_group_details.html site/index.html
+          else
+            echo "<h1>No validation report generated</h1>" > site/index.html
+            echo "<p>Expected file missing: output/validation_group_details.html</p>" >> site/index.html
+          fi
 
       - name: Upload validation artifact
         if: always()
@@ -45,6 +57,7 @@ jobs:
         with:
           name: validation-output
           path: output/
+          if-no-files-found: warn
 
       - name: Upload Pages artifact
         if: always()
