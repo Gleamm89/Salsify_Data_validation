@@ -5,20 +5,6 @@ import re
 import sys
 from collections import Counter, defaultdict
 
-# Usage:
-#   python validate_variants.py export_converted.csv
-#
-# Works with both layouts:
-#   1. Child rows have Variation_Group-ID filled.
-#   2. Child rows have Variation_Group-ID empty but salsify:parent_id filled.
-#
-# Output:
-#   output/validation_issues.csv
-#   output/validation_issues.html
-#   output/validation_summary.csv
-#   output/validation_summary.html
-#   output/validation_group_details.html
-
 input_file = sys.argv[1] if len(sys.argv) > 1 else "export_converted.csv"
 
 output_dir = "output"
@@ -29,41 +15,67 @@ PARENT_COL = "salsify:parent_id"
 SKU_COL = "ID"
 LEVEL_COL = "salsify:data_inheritance_hierarchy_level_id"
 
-VARIANT_VALUE_COLS = [
-    "Variation_Value_1 - en",
-    "Variation_Value_2 - en",
-    "Variation_Value_3 - en",
-]
+VALUE_1_OPTIONS = ["Variation_Value_1 - en", "Variation_Values_1 - en"]
+VALUE_2_OPTIONS = ["Variation_Value_2 - en", "Variation_Values_2 - en"]
+VALUE_3_OPTIONS = ["Variation_Value_3 - en", "Variation_Values_3 - en"]
 
-VARIANT_NAME_COLS = [
-    "Variation_Name_1 - en",
-    "Variation_Name_2 - en",
-    "Variation_Name_3 - en",
-]
+NAME_1_OPTIONS = ["Variation_Name_1 - en"]
+NAME_2_OPTIONS = ["Variation_Name_2 - en"]
+NAME_3_OPTIONS = ["Variation_Name_3 - en"]
 
-def is_empty(value):
-    return value is None or str(value).strip() == ""
 
 def clean(value):
     return str(value or "").strip()
 
+
+def is_empty(value):
+    return clean(value) == ""
+
+
+def make_unique_headers(headers):
+    counts = defaultdict(int)
+    result = []
+
+    for header in headers:
+        header = clean(header)
+        counts[header] += 1
+
+        if counts[header] == 1:
+            result.append(header)
+        else:
+            result.append(f"{header}__duplicate_{counts[header]}")
+
+    return result
+
+
+def row_get_any(row, possible_names):
+    values = []
+
+    for key, value in row.items():
+        base_key = key.split("__duplicate_")[0]
+
+        if base_key in possible_names and not is_empty(value):
+            values.append(clean(value))
+
+    return " | ".join(values)
+
+
 def safe_get(row, col):
     return clean(row.get(col, ""))
 
+
 def get_group_id(row):
-    """
-    Important:
-    Some Salsify exports only fill Variation_Group-ID on the parent row.
-    Child rows often have Variation_Group-ID empty and use salsify:parent_id instead.
-    """
     group_id = safe_get(row, GROUP_COL)
     parent_id = safe_get(row, PARENT_COL)
 
     if group_id:
         return group_id
+
     if parent_id:
         return parent_id
+
     return ""
+
 
 def is_child(row):
     level = safe_get(row, LEVEL_COL).lower()
@@ -73,19 +85,30 @@ def is_child(row):
 
     if level == "child":
         return True
+
     if level == "parent":
         return False
 
-    # Fallback when hierarchy level is missing.
     if parent_id:
         return True
+
     if group_id and sku == group_id:
         return False
 
     return True
 
+
+def get_variant_values(row):
+    return [
+        row_get_any(row, VALUE_1_OPTIONS),
+        row_get_any(row, VALUE_2_OPTIONS),
+        row_get_any(row, VALUE_3_OPTIONS),
+    ]
+
+
 def active_attribute_count(row):
-    return sum(1 for col in VARIANT_VALUE_COLS if not is_empty(row.get(col)))
+    return sum(1 for value in get_variant_values(row) if not is_empty(value))
+
 
 def value_type(value):
     v = clean(value)
@@ -104,45 +127,84 @@ def value_type(value):
 
     return "text"
 
+
 def majority_type(values):
     types = [value_type(v) for v in values if not is_empty(v)]
+
     if not types:
         return "empty"
+
     return Counter(types).most_common(1)[0][0]
 
+
 def get_group_attribute_names(rows):
+    name_options = [NAME_1_OPTIONS, NAME_2_OPTIONS, NAME_3_OPTIONS]
+    fallback_names = ["Attribute_1", "Attribute_2", "Attribute_3"]
     names = []
 
-    for index, name_col in enumerate(VARIANT_NAME_COLS):
+    for index, options in enumerate(name_options):
         found_names = []
+
         for row in rows:
-            if name_col in row and not is_empty(row.get(name_col)):
-                found_names.append(safe_get(row, name_col))
+            value = row_get_any(row, options)
+            if value:
+                found_names.append(value)
 
         if found_names:
             names.append(Counter(found_names).most_common(1)[0][0])
         else:
-            names.append(f"Attribute_{index + 1}")
+            names.append(fallback_names[index])
 
     return names
+
 
 groups = defaultdict(list)
 
 with open(input_file, newline="", encoding="utf-8-sig") as f:
-    reader = csv.DictReader(f)
-    fieldnames = reader.fieldnames or []
+    reader = csv.reader(f)
+    original_headers = next(reader, [])
+    headers = make_unique_headers(original_headers)
 
-    required_columns = [SKU_COL, LEVEL_COL, GROUP_COL, PARENT_COL] + VARIANT_VALUE_COLS
-    missing_columns = [c for c in required_columns if c not in fieldnames]
+    base_headers = [h.split("__duplicate_")[0] for h in headers]
+
+    required_columns = [
+        SKU_COL,
+        LEVEL_COL,
+        GROUP_COL,
+        PARENT_COL,
+    ]
+
+    missing_columns = [c for c in required_columns if c not in base_headers]
+
+    has_value_1 = any(c in base_headers for c in VALUE_1_OPTIONS)
+    has_value_2 = any(c in base_headers for c in VALUE_2_OPTIONS)
+    has_value_3 = any(c in base_headers for c in VALUE_3_OPTIONS)
+
+    missing_variant_columns = []
+
+    if not has_value_1:
+        missing_variant_columns.append("Variation_Value(s)_1 - en")
+
+    if not has_value_2:
+        missing_variant_columns.append("Variation_Value(s)_2 - en")
+
+    if not has_value_3:
+        missing_variant_columns.append("Variation_Value(s)_3 - en")
 
     if missing_columns:
         raise ValueError(f"Missing required columns in CSV: {missing_columns}")
 
-    for row in reader:
+    if missing_variant_columns:
+        raise ValueError(f"Missing variant value columns in CSV: {missing_variant_columns}")
+
+    for values in reader:
+        row = dict(zip(headers, values))
         group_id = get_group_id(row)
+
         if group_id:
             row["_Validation_Group_ID"] = group_id
             groups[group_id].append(row)
+
 
 issues = []
 summary = []
@@ -150,11 +212,10 @@ issue_group_ids = set()
 
 for group_id, rows in groups.items():
     child_rows = [r for r in rows if is_child(r)]
-
     group_issue_count = 0
 
-    # Rule 1: all child SKUs in a group should use the same number of active variation attributes.
     count_by_sku = []
+
     for row in child_rows:
         sku = safe_get(row, SKU_COL)
         count_by_sku.append((sku, active_attribute_count(row), row))
@@ -165,6 +226,7 @@ for group_id, rows in groups.items():
     for sku, actual_count, row in count_by_sku:
         if actual_count != expected_count:
             issue_group_ids.add(group_id)
+
             issues.append({
                 "Group_ID": group_id,
                 "SKU": sku,
@@ -172,13 +234,17 @@ for group_id, rows in groups.items():
                 "Issue": "Inconsistent number of variation attributes in group",
                 "Expected": str(expected_count),
                 "Actual": str(actual_count),
-                "Value": " | ".join(safe_get(row, col) for col in VARIANT_VALUE_COLS),
+                "Value": " | ".join(get_variant_values(row)),
             })
+
             group_issue_count += 1
 
-    # Rule 2: each variation attribute should have a logical value type within the group.
-    for col in VARIANT_VALUE_COLS:
-        values = [safe_get(r, col) for r in child_rows if not is_empty(r.get(col))]
+    for index, attribute_name in enumerate(["Variation_Values_1 - en", "Variation_Values_2 - en", "Variation_Value_3 - en"]):
+        values = [
+            get_variant_values(r)[index]
+            for r in child_rows
+            if not is_empty(get_variant_values(r)[index])
+        ]
 
         if len(values) < 3:
             continue
@@ -187,7 +253,7 @@ for group_id, rows in groups.items():
 
         for row in child_rows:
             sku = safe_get(row, SKU_COL)
-            value = safe_get(row, col)
+            value = get_variant_values(row)[index]
 
             if is_empty(value):
                 continue
@@ -196,15 +262,17 @@ for group_id, rows in groups.items():
 
             if actual_type != expected_type:
                 issue_group_ids.add(group_id)
+
                 issues.append({
                     "Group_ID": group_id,
                     "SKU": sku,
-                    "Attribute": col,
+                    "Attribute": attribute_name,
                     "Issue": "Non-logical value type compared with other SKUs in same group",
                     "Expected": expected_type,
                     "Actual": actual_type,
                     "Value": value,
                 })
+
                 group_issue_count += 1
 
     summary.append({
@@ -215,11 +283,13 @@ for group_id, rows in groups.items():
         "Issues": group_issue_count,
     })
 
+
 def write_csv(path, fieldnames, rows):
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+
 
 issue_fields = [
     "Group_ID",
@@ -245,6 +315,7 @@ summary_csv = os.path.join(output_dir, "validation_summary.csv")
 write_csv(issues_csv, issue_fields, issues)
 write_csv(summary_csv, summary_fields, summary)
 
+
 def csv_to_html(csv_file, html_file, title):
     with open(csv_file, newline="", encoding="utf-8") as f:
         rows = list(csv.reader(f))
@@ -252,6 +323,7 @@ def csv_to_html(csv_file, html_file, title):
     total_records = max(len(rows) - 1, 0)
 
     html_rows = []
+
     for index, row in enumerate(rows):
         tag = "th" if index == 0 else "td"
         cells = "".join(f"<{tag}>{html.escape(str(cell))}</{tag}>" for cell in row)
@@ -264,7 +336,7 @@ def csv_to_html(csv_file, html_file, title):
     <title>{html.escape(title)}</title>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 24px; background: #f7f8fa; color: #222; }}
-        .card {{ background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }}
+        .card {{ background: white; border: 1px solid #ddd; border-radius: 10px; padding: 20px; }}
         table {{ border-collapse: collapse; width: 100%; background: white; }}
         th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: top; }}
         th {{ background: #f0f2f5; position: sticky; top: 0; }}
@@ -283,11 +355,15 @@ def csv_to_html(csv_file, html_file, title):
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(page)
 
+
 def build_issue_lookup():
     lookup = defaultdict(list)
+
     for issue in issues:
         lookup[(issue["Group_ID"], issue["SKU"])].append(issue["Issue"])
+
     return lookup
+
 
 def build_group_details_html(html_file):
     issue_lookup = build_issue_lookup()
@@ -301,6 +377,7 @@ def build_group_details_html(html_file):
         group_issues = [i for i in issues if i["Group_ID"] == group_id]
 
         issue_rows = []
+
         for issue in group_issues:
             issue_rows.append(
                 "<tr>"
@@ -313,18 +390,20 @@ def build_group_details_html(html_file):
                 "</tr>"
             )
 
-        raw_value_headers = "".join(f"<th>{html.escape(col)}</th>" for col in VARIANT_VALUE_COLS)
+        raw_value_headers = "".join(
+            f"<th>{html.escape(col)}</th>"
+            for col in ["Variation_Values_1 - en", "Variation_Values_2 - en", "Variation_Value_3 - en"]
+        )
+
         interpreted_headers = "".join(f"<th>{html.escape(name)}</th>" for name in attr_names)
 
         item_rows = []
 
-        # Include ALL child SKUs in the issue group.
         for row in child_rows:
             sku = safe_get(row, SKU_COL)
             active_count = active_attribute_count(row)
             row_issues = issue_lookup.get((group_id, sku), [])
-
-            raw_values = [safe_get(row, value_col) for value_col in VARIANT_VALUE_COLS]
+            raw_values = get_variant_values(row)
 
             raw_value_cells = "".join(f"<td>{html.escape(value)}</td>" for value in raw_values)
             interpreted_value_cells = "".join(f"<td>{html.escape(value)}</td>" for value in raw_values)
@@ -374,6 +453,7 @@ def build_group_details_html(html_file):
             </table>
         </section>
         """
+
         group_sections.append(section)
 
     page = f"""<!doctype html>
@@ -394,7 +474,6 @@ def build_group_details_html(html_file):
             border-radius: 10px;
             padding: 18px 20px;
             margin-bottom: 24px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }}
         table {{
             border-collapse: collapse;
@@ -441,11 +520,25 @@ def build_group_details_html(html_file):
     with open(html_file, "w", encoding="utf-8") as f:
         f.write(page)
 
-csv_to_html(issues_csv, os.path.join(output_dir, "validation_issues.html"), "Validation Issues")
-csv_to_html(summary_csv, os.path.join(output_dir, "validation_summary.html"), "Validation Summary")
-build_group_details_html(os.path.join(output_dir, "validation_group_details.html"))
+
+csv_to_html(
+    issues_csv,
+    os.path.join(output_dir, "validation_issues.html"),
+    "Validation Issues",
+)
+
+csv_to_html(
+    summary_csv,
+    os.path.join(output_dir, "validation_summary.html"),
+    "Validation Summary",
+)
+
+build_group_details_html(
+    os.path.join(output_dir, "validation_group_details.html")
+)
 
 print("Validation complete.")
+print(f"Input file: {input_file}")
 print(f"Groups checked: {len(groups)}")
 print(f"Groups with issues: {len(issue_group_ids)}")
 print(f"Issues found: {len(issues)}")
