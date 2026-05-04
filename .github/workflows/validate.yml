@@ -31,7 +31,11 @@ jobs:
 
       - name: Run validation script
         continue-on-error: true
-        run: python validate_variants.py export_converted.csv
+        run: |
+          for file in data/validation_input_part_*.csv; do
+          echo "Validating #file"
+          python validate_variants.py "$file" || true
+          done
 
       - name: Prepare Pages content
         if: always()
