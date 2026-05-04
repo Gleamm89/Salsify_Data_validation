@@ -9,37 +9,50 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Run validation script
+        continue-on-error: true
         run: python validate_variants.py export_converted.csv
 
-      - name: Upload results
-        uses: actions/upload-artifact@v4
+      - name: Prepare Pages content
         if: always()
+        run: |
+          mkdir -p site
+          cp output/validation_group_details.html site/index.html
+
+      - name: Upload validation artifact
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: validation-output
           path: output/
 
-      - name: Prepare GitHub Pages content
+      - name: Upload Pages artifact
         if: always()
-        run: |
-          mkdir -p docs
-          cp output/validation_group_details.html docs/index.html
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
 
-      - name: Commit GitHub Pages content
+      - name: Deploy to GitHub Pages
         if: always()
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add docs/index.html
-          git commit -m "Update validation dashboard" || echo "No changes to commit"
-          git push
+        id: deployment
+        uses: actions/deploy-pages@v4
